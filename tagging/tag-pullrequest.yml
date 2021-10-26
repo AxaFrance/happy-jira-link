@@ -1,0 +1,36 @@
+parameters:
+- name: repositoryAlias
+  type: string
+- name: organizationName
+  type: string
+- name: projectName
+  type: string
+- name: jiraBaseUrl
+  type: string
+
+jobs:
+- job: 'TAG_PULLREQUEST'
+  displayName: 'Tag Pull Request'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  pool:
+    name: AzureForgev2Windows
+    demands:
+    - AGENT_OS -equals windows
+  workspace:
+    clean: all
+
+  steps:
+  - checkout: ${{ parameters.repositoryAlias }}
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/tagging/scripts/02-tag-pr-and-export-tags.ps1
+      arguments: >
+        -organizationName '${{ parameters.organizationName }}'
+        -projectName '${{ parameters.projectName }}'
+        -pullRequestId '$(System.PullRequest.PullRequestId)'
+        -jiraBaseUrl '${{ parameters.jiraBaseUrl }}'
+        -pat '$(System.AccessToken)'
+    displayName: 'Consume API to Tag the current PR and Export JIRA Ids'
+    name: CurrentPullRequestAttributes

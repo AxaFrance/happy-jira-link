@@ -1,0 +1,42 @@
+parameters:
+# ⚠ must be dependant on a stage exporting CurrentPullRequestAttributes.JiraIdList
+- name: dependsOn
+  type: object
+  default: tagging
+- name: repositoryAlias
+  type: string
+  default: 'happy-jira-link'
+- name: organizationName
+  type: string
+  default: 'MyCompany'
+- name: projectName
+  type: string
+  default: 'MyProject'
+- name: jira
+  type: object
+  default:
+    # The group must contain a variable called "jira_pat" (the PAT as a secret)
+    variableGroup: 'olisail-jira-pat-group'
+    baseUrl: 'https://jira.my.intranet'
+    projectId: '12345'
+    appCode: '12345'
+    tribeId: '12345'
+    domainId: '12345'
+    squadId: '12345'
+
+stages:
+- stage: jira
+  displayName: 'JIRA Processing'
+  dependsOn: ${{ parameters.dependsOn }}
+  jobs:  
+  - template: process-jira-status.yml
+    parameters:
+      repositoryAlias: ${{ parameters.repositoryAlias }}
+      organizationName: ${{ parameters.organizationName }}
+      projectName: ${{ parameters.projectName }}
+      jira: ${{ parameters.jira }}
+  - template: tag-pullrequest.yml
+    parameters:
+      repositoryAlias: ${{ parameters.repositoryAlias }}
+      organizationName: ${{ parameters.organizationName }}
+      projectName: ${{ parameters.projectName }}

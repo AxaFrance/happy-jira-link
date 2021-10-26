@@ -1,0 +1,32 @@
+parameters:
+- name: repositoryAlias
+  type: string
+- name: organizationName
+  type: string
+- name: projectName
+  type: string
+
+jobs:
+- job: tag_pipeline
+  displayName: 'Tag Pipeline'
+  pool:
+    name: AzureForgev2Linux
+    demands:
+    - AGENT_OS -equals linux
+  workspace:
+    clean: all
+
+  steps:
+  - checkout: ${{ parameters.repositoryAlias }}
+  
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/tagging/scripts/01-tag-pipeline.ps1
+      arguments: >
+        -buildId '$(Build.BuildId)'
+        -buildReason '$(Build.Reason)'
+        -organizationName '${{ parameters.organizationName }}'
+        -projectName '${{ parameters.projectName }}'
+        -pat '$(System.AccessToken)'
+    displayName: 'Consume API to Tag the current Build'

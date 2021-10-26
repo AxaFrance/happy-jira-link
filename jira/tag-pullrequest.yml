@@ -1,0 +1,38 @@
+parameters:
+- name: repositoryAlias
+  type: string
+- name: organizationName
+  type: string
+- name: projectName
+  type: string
+
+jobs:
+- job: tag_pullrequest_with_jira
+  displayName: 'Tag PR using JIRA Status'
+  dependsOn: ['process_jira_status']
+  condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), ne('0', dependencies.process_jira_status.outputs['CurrentPullRequestJiraCards.JiraCardsCount']), ne('', dependencies.process_jira_status.outputs['CurrentPullRequestJiraCards.JiraCardsCount']))
+  pool:
+    name: AzureForgev2Windows
+    demands:
+    - AGENT_OS -equals windows
+  workspace:
+    clean: all
+  variables:
+    # CurrentJiraCards must be a JSON-serialized list
+    - name: CurrentJiraCards
+      value: $[dependencies.process_jira_status.outputs['CurrentPullRequestJiraCards.JiraCards']]
+
+  steps:
+  - checkout: ${{ parameters.repositoryAlias }}
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/jira/scripts/05-tag-pr.ps1
+      arguments: >
+        -jiraCardList '$(CurrentJiraCards)'
+        -organizationName '${{ parameters.organizationName }}'
+        -projectName '${{ parameters.projectName }}'
+        -pullRequestId '$(System.PullRequest.PullRequestId)'
+        -pat '$(System.AccessToken)'
+    displayName: 'Consume AzureDevOps API to update PR Tags'

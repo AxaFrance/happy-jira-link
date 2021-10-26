@@ -1,0 +1,97 @@
+parameters:
+- name: repositoryAlias
+  type: string
+- name: organizationName
+  type: string
+- name: projectName
+  type: string
+- name: jira
+  type: object
+
+jobs:
+- job: process_jira_status
+  displayName: 'Process JIRA Status'
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  pool:
+    name: AzureForgev2Windows
+    demands:
+    - AGENT_OS -equals windows
+  workspace:
+    clean: all
+  variables:
+    # The group must contain a variable called "jira_pat"
+    - group: ${{ parameters.jira.variableGroup }}
+    # JiraIdList must be a JSON-serialized list
+    - name: JiraIdList
+      value: $[stageDependencies.tagging.TAG_PULLREQUEST.outputs['CurrentPullRequestAttributes.JiraIdList']]
+    - name: JiraIdListCount
+      value: $[stageDependencies.tagging.TAG_PULLREQUEST.outputs['CurrentPullRequestAttributes.JiraIdListCount']]
+
+  steps:
+  - checkout: ${{ parameters.repositoryAlias }}
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/jira/scripts/01-get-and-export-pr-title-and-description.ps1
+      arguments: >
+        -pullRequestId '$(System.PullRequest.PullRequestId)'
+        -organizationName '${{ parameters.organizationName }}'
+        -repositoryName '$(Build.Repository.Name)'
+        -projectName '${{ parameters.projectName }}'
+        -pat '$(System.AccessToken)'
+    displayName: 'Consume AzureDevOps API to export PR Title & Description'
+    name: 'CurrentPullRequestContent'
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/jira/scripts/02-create-retrieve-and-export-jira-cards.ps1
+      arguments: >
+        -jiraBaseUrl '${{ parameters.jira.baseUrl }}'
+        -jiraProjectId '${{ parameters.jira.projectId }}'
+        -jiraAppCode '${{ parameters.jira.appCode }}'
+        -jiraTribeId '${{ parameters.jira.tribeId }}'
+        -jiraDomainId '${{ parameters.jira.domainId }}'
+        -jiraSquadId '${{ parameters.jira.squadId }}'
+        -jiraIdListCount '$(JiraIdListCount)'
+        -jiraIdList '$(JiraIdList)'
+        -sourceRepositoryUri '$(System.PullRequest.SourceRepositoryURI)'
+        -pullRequestId '$(System.PullRequest.PullRequestId)'
+        -currentPullRequestContentTitle '$(CurrentPullRequestContent.Title)'
+        -buildRequestedFor '$(Build.RequestedFor)'
+        -jiraPat '$(jira_pat)'
+    displayName: 'Consume JIRA API to retrieve cards information'
+    name: 'CurrentPullRequestJiraCards'
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/jira/scripts/03-update-pr-description.ps1
+      arguments: >
+        -currentPullRequestDescription '$(CurrentPullRequestContent.Description)'
+        -jiraBaseUrl '${{ parameters.jira.baseUrl }}'
+        -jiraCreatedCardKey '$(CurrentPullRequestJiraCards.CreatedCardKey)'
+        -pullRequestId '$(System.PullRequest.PullRequestId)'
+        -organizationName '${{ parameters.organizationName }}'
+        -repositoryName '$(Build.Repository.Name)'
+        -projectName '${{ parameters.projectName }}'
+        -pat '$(System.AccessToken)'
+    displayName: 'Consume AzureDevOps API to update PR Description'
+    condition: ne('', variables['CurrentPullRequestJiraCards.CreatedCardKey'])
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: $(System.DefaultWorkingDirectory)/jira/scripts/04-update-pr-comments.ps1
+      arguments: >
+        -jiraIdListCount '$(JiraIdListCount)'
+        -jiraCreatedCardKey '$(CurrentPullRequestJiraCards.CreatedCardKey)'
+        -jiraCardList '$(CurrentPullRequestJiraCards.JiraCards)'
+        -organizationName '${{ parameters.organizationName }}'
+        -projectName '${{ parameters.projectName }}'
+        -repositoryName '$(Build.Repository.Name)'
+        -pullRequestId '$(System.PullRequest.PullRequestId)'
+        -pat '$(System.AccessToken)'
+        -automationUserId '352197f3-7fca-4b94-8083-05ed968fbe62'
+    displayName: 'Consume AzureDevOps API to update comments'
