@@ -1,5 +1,9 @@
 param (
     [string]$jiraBaseUrl = $(throw "-jiraBaseUrl is required."),
+    [string]$jiraAppCodeKey = $(throw "- is required."),
+    [string]$jiraTribeKey = $(throw "-jiraTribeKey is required."),
+    [string]$jiraDomainKey = $(throw "-jiraDomainKey is required."),
+    [string]$jiraSquadKey = $(throw "-jiraSquadKey is required."),
     [string]$jiraProjectId = $(throw "-jiraProjectId is required."),
     [string]$jiraAppCode = $(throw "-jiraAppCode is required."),
     [string]$jiraTribeId = $(throw "-jiraTribeId is required."),
@@ -39,12 +43,12 @@ if ( 0 -eq $jiraCardIds.Count ) {
     $description = "Have a look at $pullRequestUri (or reach $buildRequestedFor)"
 
     $project = "`"project`": { `"id`": `"$jiraProjectId`" }"
-
+    
     # This is organization-specific
-    $appCode = "`"customfield_16801`": $jiraAppCode"
-    $tribe = "`"customfield_27500`": `"$jiraTribeId`""
-    $domain = "`"customfield_27501`": [ `"$jiraDomainId`" ]"
-    $squad = "`"customfield_27502`": `"$jiraSquadId`""
+    $appCode = "`"$jiraAppCodeKey`": $jiraAppCode"
+    $tribe = "`"$jiraTribeKey`": `"$jiraTribeId`""
+    $domain = "`"$jiraDomainKey`": [ `"$jiraDomainId`" ]"
+    $squad = "`"$jiraSquadKey`": `"$jiraSquadId`""
 
     # To avoid creating an over-complexified model and serializing it, I used an already built JSON based on a previous request
     $body = "{ `"fields`": { `"priority`": { `"id`": `"4`" }, `"issuetype`": { `"id`": `"14601`" }, $project, `"description`": `"$description`", `"summary`": `"$title`", $appCode, $tribe, $domain, $squad } }"

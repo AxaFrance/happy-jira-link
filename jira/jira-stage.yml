@@ -18,11 +18,17 @@ parameters:
     # The group must contain a variable called "jira_pat" (the PAT as a secret)
     variableGroup: 'olisail-jira-pat-group'
     baseUrl: 'https://jira.my.intranet'
-    projectId: '12345'
-    appCode: '12345'
-    tribeId: '12345'
-    domainId: '12345'
-    squadId: '12345'
+    cardFieldKeys:
+      appCode: 'customfield_16801'
+      tribe: 'customfield_27500'
+      domain: 'customfield_27501'
+      squad: 'customfield_27502'
+    cardFieldValues:
+      projectId: '12345'
+      appCode: '12345'
+      tribeId: '12345'
+      domainId: '12345'
+      squadId: '12345'
     ticketStatusIds:
       codeReviewInProgress: '12345'
       codeReviewDone: '12345'
