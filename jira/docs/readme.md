@@ -86,6 +86,9 @@ stages:
       tribeId: '12345'
       domainId: '12345'
       squadId: '12345'
+      ticketStatusIds:
+        codeReviewInProgress: '12345'
+        codeReviewDone: '12345'
 
 # ...
 ```

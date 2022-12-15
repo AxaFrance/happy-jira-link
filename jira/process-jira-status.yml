@@ -54,6 +54,8 @@ jobs:
         -jiraTribeId '${{ parameters.jira.tribeId }}'
         -jiraDomainId '${{ parameters.jira.domainId }}'
         -jiraSquadId '${{ parameters.jira.squadId }}'
+        -jiraStatusIdCodeReviewInProgress '${{ parameters.jira.ticketStatusIds.codeReviewInProgress }}'
+        -jiraStatusIdCodeReviewDone '${{ parameters.jira.ticketStatusIds.codeReviewDone }}'
         -jiraIdListCount '$(JiraIdListCount)'
         -jiraIdList '$(JiraIdList)'
         -sourceRepositoryUri '$(System.PullRequest.SourceRepositoryURI)'

@@ -5,6 +5,8 @@ param (
     [string]$jiraTribeId = $(throw "-jiraTribeId is required."),
     [string]$jiraDomainId = $(throw "-jiraDomainId is required."),
     [string]$jiraSquadId = $(throw "-jiraSquadId is required."),
+    [string]$jiraStatusIdCodeReviewInProgress = $(throw "-jiraStatusIdCodeReviewInProgress is required."),
+    [string]$jiraStatusIdCodeReviewDone = $(throw "-jiraStatusIdCodeReviewDone is required."),
     [string]$jiraIdListCount = $(throw "-jiraIdListCount is required."), 
     [string]$jiraIdList = $(throw "-jiraIdList is required."),    
     [string]$sourceRepositoryUri = $(throw "-sourceRepositoryUri is required."),
@@ -24,9 +26,8 @@ $jiraCardApiUri = "$jiraBaseUrl/rest/api/latest/issue/"
 $jiraAuthenticationHeader = @{Authorization = 'Bearer ' + $jiraPat }
 $jsonType = 'application/json'
 
-# May be project-specific
-$codeReviewInProgress = @{ Name = 'Code review - En cours'; Id = '14822' }
-$codeReviewDone = @{ Name = 'Code review - Terminé'; Id = '14823' }
+$codeReviewInProgress = @{ Name = 'Code review - In Progress'; Id = $jiraStatusIdCodeReviewInProgress }
+$codeReviewDone = @{ Name = 'Code review - Done'; Id = $jiraStatusIdCodeReviewDone }
 
 $jiraCards = New-Object 'Collections.Generic.List[string]'
 if ( 0 -eq $jiraCardIds.Count ) {
@@ -38,6 +39,8 @@ if ( 0 -eq $jiraCardIds.Count ) {
     $description = "Have a look at $pullRequestUri (or reach $buildRequestedFor)"
 
     $project = "`"project`": { `"id`": `"$jiraProjectId`" }"
+
+    # This is organization-specific
     $appCode = "`"customfield_16801`": $jiraAppCode"
     $tribe = "`"customfield_27500`": `"$jiraTribeId`""
     $domain = "`"customfield_27501`": [ `"$jiraDomainId`" ]"
