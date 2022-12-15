@@ -8,7 +8,7 @@ parameters:
   default: 'happy-jira-link'
 - name: organizationName
   type: string
-  default: 'MyCompany'
+  default: 'axafrance'
 - name: projectName
   type: string
   default: 'MyProject'
