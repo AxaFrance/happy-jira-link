@@ -99,5 +99,4 @@ jobs:
         -repositoryName '$(Build.Repository.Name)'
         -pullRequestId '$(System.PullRequest.PullRequestId)'
         -pat '$(System.AccessToken)'
-        -automationUserId '352197f3-7fca-4b94-8083-05ed968fbe62'
     displayName: 'Consume AzureDevOps API to update comments'

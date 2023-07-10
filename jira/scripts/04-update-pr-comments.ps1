@@ -6,8 +6,7 @@ param (
   [string]$projectName = $(throw "-projectName is required."),
   [string]$repositoryName = $(throw "-repositoryName is required."),
   [string]$pullRequestId = $(throw "-pullRequestId is required."),    
-  [string]$pat = $(throw "-pat is required."),
-  [string]$automationUserId = $(throw "-automationUserId is required.")
+  [string]$pat = $(throw "-pat is required.")
 )
 
 $parsedJiraCards = New-Object 'Collections.Generic.List[string]'
@@ -27,6 +26,17 @@ $jsonType = 'application/json'
 Write-Host 'Getting PR Threads content...'
 $getPullRequestThreadsResponse = Invoke-RestMethod -Uri $getPullRequestThreadsUri -ContentType $jsonType -Method Get -Headers $azureDevOpsAuthenticationHeader -Verbose
 Write-Host "Done."
+
+$getUserDataUri = "https://dev.azure.com/$organizationName/_apis/connectionData"
+
+Write-Host 'Getting the PAT user data...'
+$getUserResponse = Invoke-RestMethod -Uri $getUserDataUri -ContentType $jsonType -Method Get -Headers $azureDevOpsAuthenticationHeader -Verbose
+Write-Host "Done."
+
+$automationUserName = $getUserResponse.authorizedUser.providerDisplayName
+$automationUserId = $getUserResponse.authorizedUser.id
+
+Write-Host "Found data for the user '$automationUserName'!"
 
 Write-Host 'Clean self comments...'
 foreach ( $thread in $getPullRequestThreadsResponse.value ) {
