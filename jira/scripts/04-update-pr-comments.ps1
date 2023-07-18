@@ -27,7 +27,8 @@ Write-Host 'Getting PR Threads content...'
 $getPullRequestThreadsResponse = Invoke-RestMethod -Uri $getPullRequestThreadsUri -ContentType $jsonType -Method Get -Headers $azureDevOpsAuthenticationHeader -Verbose
 Write-Host "Done."
 
-$getUserDataUri = "https://dev.azure.com/$organizationName/_apis/connectionData"
+# this API needs the preview flag in 6.0
+$getUserDataUri = "https://dev.azure.com/$organizationName/_apis/connectionData/?api-version=$version-preview"
 
 Write-Host 'Getting the PAT user data...'
 $getUserResponse = Invoke-RestMethod -Uri $getUserDataUri -ContentType $jsonType -Method Get -Headers $azureDevOpsAuthenticationHeader -Verbose
